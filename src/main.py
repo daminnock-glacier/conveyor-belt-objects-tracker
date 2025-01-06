@@ -142,7 +142,7 @@ def get_points_image(
             image_i_load = load_image(paths[idx])
             image_j_load = load_image(paths[idx + 1])
             m_kpts0, m_kpts1, kpts0, kpts1, matches01 = lightglue(
-                image_i_load, image_j_load, max_num_keypoints=4096
+                image_i_load, image_j_load, max_num_keypoints=512
             )
             diff = _get_diff(m_kpts0, m_kpts1)
             if any(torch.isnan(diff)):
@@ -154,7 +154,7 @@ def get_points_image(
                 image_j_load = load_image(paths[idx + 1], crop_vertically=(x0, x1))
                 try:
                     m_kpts0, m_kpts1, kpts0, kpts1, matches01 = lightglue(
-                        image_i_load, image_j_load, max_num_keypoints=4096
+                        image_i_load, image_j_load, max_num_keypoints=512
                     )
                     diff = _get_diff(m_kpts0, m_kpts1)
                 except ValueError:
@@ -233,7 +233,7 @@ def get_points_video(
         frame_id_i, frame_id_j = pair_ids
         if matches[frame_id_i][1]["diff"] is None:
             m_kpts0, m_kpts1, kpts0, kpts1, matches01 = lightglue(
-                image_i, image_j, max_num_keypoints=4096
+                image_i, image_j, max_num_keypoints=512
             )
             diff = _get_diff(m_kpts0, m_kpts1)
             if any(torch.isnan(diff)):
@@ -243,7 +243,7 @@ def get_points_video(
                 x0, x1 = _find_static_borders(m_kpts0, m_kpts1, image_i.shape[1], image_j.shape[1])
                 try:
                     m_kpts0, m_kpts1, kpts0, kpts1, matches01 = lightglue(
-                        image_i[:, x0:x1, :], image_j[:, x0:x1, :], max_num_keypoints=4096
+                        image_i[:, x0:x1, :], image_j[:, x0:x1, :], max_num_keypoints=512
                     )
                     diff = _get_diff(m_kpts0, m_kpts1)
                 except ValueError:
@@ -807,7 +807,7 @@ def manual_track():
 
 
 @sly.timeit
-def lightglue(image0, image1, max_num_keypoints=4096, device="cpu"):
+def lightglue(image0, image1, max_num_keypoints=2048, device="cpu"):
 
     extractor = (
         SuperPoint(max_num_keypoints=max_num_keypoints, model_dir=g.MODEL_DIR).eval().to(device)
@@ -815,9 +815,9 @@ def lightglue(image0, image1, max_num_keypoints=4096, device="cpu"):
     matcher = (
         LightGlue(
             features="superpoint",
-            depth_confidence=0.8,
-            width_confidence=0.8,
-            filter_threshold=0.1,
+            depth_confidence=0.9,
+            width_confidence=0.9,
+            filter_threshold=0.05,
             # n_layers=3,
             model_dir=g.MODEL_DIR,
         )
